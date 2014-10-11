@@ -152,18 +152,9 @@ if __name__ == '__main__':
         next_day = None
 
     for loc in location_dicts:
-        print(loc['name'])
         parsed = parse_forecast(fetch_forecast(loc['code'], tomorrow))
-        print(build_weather_string(parsed))
-        print()
+        location[tomorrow] = build_weather_string(parsed)
 
     # with Pool() as pool:
-    #     import time
-    #     timer_start = time.time()
     #     pool.starmap(add_daily_forecast_to_dict,
     #                  [(loc, tomorrow) for loc in location_dicts])
-    #     print(time.time() - timer_start)
-    #     for l in location_dicts:
-    #         print(l['name'])
-    #         print(l[tomorrow])
-    #         print()

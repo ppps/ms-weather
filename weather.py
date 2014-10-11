@@ -134,6 +134,12 @@ Wind {Wind speed} {Wind direction}{precip}'''
     return weather_string
 
 
+def add_daily_forecast_to_dict(location, forecast_date):
+    raw_forecast = fetch_forecast(location['code'], forecast_date)
+    parsed = parse_forecast(raw_forecast)
+    location[forecast_date] = build_weather_string(parsed)
+
+
 def date_string(d):
     return d.isoformat() + 'T00:00:00Z'
 
@@ -150,3 +156,14 @@ for loc in location_dicts:
     parsed = parse_forecast(fetch_forecast(loc['code'], tomorrow))
     print(build_weather_string(parsed))
     print()
+
+# with Pool() as pool:
+#     import time
+#     timer_start = time.time()
+#     pool.starmap(add_daily_forecast_to_dict,
+#                  [(loc, tomorrow) for loc in location_dicts])
+#     print(time.time() - timer_start)
+#     for l in location_dicts:
+#         print(l['name'])
+#         print(l[tomorrow])
+#         print()

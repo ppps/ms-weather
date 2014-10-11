@@ -167,9 +167,14 @@ if __name__ == '__main__':
     for loc in location_dicts:
         parsed = parse_forecast(fetch_forecast(loc['code'], tomorrow))
         loc[tomorrow] = build_weather_string(parsed)
+        if next_day:
+            parsed = parse_forecast(fetch_forecast(loc['code'], next_day))
+            loc[next_day] = build_weather_string(parsed)
 
-    # with Pool() as pool:
-    #     pool.starmap(add_daily_forecast_to_dict,
-    #                  [(loc, tomorrow) for loc in location_dicts])
-
+    with Pool() as pool:
+        pool.starmap(add_daily_forecast_to_dict,
+                     [(loc, tomorrow) for loc in location_dicts])
+        if next_day:
+            pool.starmap(add_daily_forecast_to_dict,
+                         [(loc, next_day) for loc in location_dicts])
 

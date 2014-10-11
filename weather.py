@@ -131,7 +131,10 @@ Wind {Wind speed} {Wind direction}{precip}'''
     weather_string = weather_template.format(temp=temp_string,
                                              precip=precip_string,
                                              **parsed_dict)
-
     return weather_string
 
-print(build_weather_string(parse_forecast(fetch_forecast(location_dicts[0]['code']))))
+for loc in location_dicts:
+    print(loc['name'])
+    parsed = parse_forecast(fetch_forecast(loc['code']))
+    print(build_weather_string(parsed))
+    print()

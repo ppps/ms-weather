@@ -40,6 +40,29 @@ weather_types = {'NA': 'Not available',
                  29: 'Thunder shower',      # day
                  30: 'Thunder'}
 
+forecast_codes = {
+    'FDm': {'name': 'Feels like',
+            'units': '°C'},
+    'Dm': {'name': 'Max temp',
+           'units': '°C'},
+    'Gn': {'name': 'Wind gusts',
+           'units': 'mph'},
+    'Hn': {'name': 'Humidity',
+           'units': '%'},
+    'V': {'name': 'Visibility',
+          'units': ''},
+    'D': {'name': 'Wind direction',
+          'units': ''},
+    'S': {'name': 'Wind speed',
+          'units': 'mph'},
+    'U': {'name': 'UV',
+          'units': ''},
+    'W': {'name': 'Weather type',
+          'units': ''},
+    'PPd': {'name': 'Precipitation probability',
+            'units': '%'},
+}
+
 urls = {
     'base': 'http://datapoint.metoffice.gov.uk/public/data/',
     'forecast': 'val/wxfcs/all/json/{location}',
@@ -63,30 +86,6 @@ location_tuples = (
     )
 
 location_dicts = [{'name': a, 'code': b} for a, b in location_tuples]
-forecast_time = (date.today() + timedelta(1)).isoformat() + 'T00:00:00Z'
-
-forecast_codes = {
-    'FDm': {'name': 'Feels like',
-            'units': '°C'},
-    'Dm': {'name': 'Max temp',
-           'units': '°C'},
-    'Gn': {'name': 'Wind gusts',
-           'units': 'mph'},
-    'Hn': {'name': 'Humidity',
-           'units': '%'},
-    'V': {'name': 'Visibility',
-          'units': ''},
-    'D': {'name': 'Wind direction',
-          'units': ''},
-    'S': {'name': 'Wind speed',
-          'units': 'mph'},
-    'U': {'name': 'UV',
-          'units': ''},
-    'W': {'name': 'Weather type',
-          'units': ''},
-    'PPd': {'name': 'Precipitation probability',
-            'units': '%'},
-}
 
 
 def fetch_forecast(location_code, target_date):
@@ -133,6 +132,8 @@ Wind {Wind speed} {Wind direction}{precip}'''
                                              precip=precip_string,
                                              **parsed_dict)
     return weather_string
+
+forecast_time = (date.today() + timedelta(1)).isoformat() + 'T00:00:00Z'
 
 for loc in location_dicts:
     print(loc['name'])

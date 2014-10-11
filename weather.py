@@ -133,12 +133,20 @@ Wind {Wind speed} {Wind direction}{precip}'''
                                              **parsed_dict)
     return weather_string
 
-forecast_time = (date.today() + timedelta(1)).isoformat() + 'T00:00:00Z'
+
+def date_string(d):
+    return d.isoformat() + 'T00:00:00Z'
+
+
+today = date.today()
+tomorrow = date_string(today + timedelta(1))
+if today.weekday() == 4:    # today is Friday
+    next_day = date_string(today + timedelta(2))
+else:
+    next_day = None
 
 for loc in location_dicts:
     print(loc['name'])
-    parsed = parse_forecast(fetch_forecast(loc['code'], forecast_time))
+    parsed = parse_forecast(fetch_forecast(loc['code'], tomorrow))
     print(build_weather_string(parsed))
     print()
-
-# with Pool() as pool:

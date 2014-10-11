@@ -2,6 +2,7 @@
 
 import requests
 from datetime import date, timedelta
+from multiprocessing.dummy import Pool
 
 with open('metoffice_api_key') as keyfile:
     api_key = keyfile.read()
@@ -88,11 +89,11 @@ forecast_codes = {
 }
 
 
-def fetch_forecast(location_code):
+def fetch_forecast(location_code, target_date):
     url = urls['base'] + urls['forecast'].format(location=location_code)
     params = {'key': api_key,
               'res': 'daily',
-              'time': forecast_time}
+              'time': target_date}
     response = requests.request('GET', url, params=params)
     conditions = response.json()['SiteRep']['DV']['Location']['Period']['Rep']
     day_forecast = next(f for f in conditions if f['$'] == 'Day')
@@ -135,6 +136,8 @@ Wind {Wind speed} {Wind direction}{precip}'''
 
 for loc in location_dicts:
     print(loc['name'])
-    parsed = parse_forecast(fetch_forecast(loc['code']))
+    parsed = parse_forecast(fetch_forecast(loc['code'], forecast_time))
     print(build_weather_string(parsed))
     print()
+
+# with Pool() as pool:

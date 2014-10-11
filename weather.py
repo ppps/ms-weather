@@ -88,40 +88,50 @@ forecast_codes = {
 }
 
 
-response = requests.get(
-    urls['base'] + urls['forecast'].format(location=location_dicts[0]['code']),
-    params={'key': api_key, 'res': 'daily', 'time': forecast_time}
-    )
-conditions = response.json()['SiteRep']['DV']['Location']['Period']['Rep']
-day_forecast = next(f for f in conditions if f['$'] == 'Day')
+def fetch_forecast(location_code):
+    url = urls['base'] + urls['forecast'].format(location=location_code)
+    params = {'key': api_key,
+              'res': 'daily',
+              'time': forecast_time}
+    response = requests.request('GET', url, params=params)
+    conditions = response.json()['SiteRep']['DV']['Location']['Period']['Rep']
+    day_forecast = next(f for f in conditions if f['$'] == 'Day')
+    return day_forecast
 
-working_dict = {}
-for k, v in day_forecast.items():
-    if k == '$':
-        continue
-    name = forecast_codes[k]['name']
-    units = forecast_codes[k]['units']
-    if name == 'Weather type':
-        working_dict[name] = weather_types[int(v)]
-    else:
-        working_dict[name] = v + units
 
-weather_template = '''\
+def parse_forecast(forecast):
+    working_dict = {}
+    for k, v in forecast.items():
+        if k == '$':
+            continue
+        name = forecast_codes[k]['name']
+        units = forecast_codes[k]['units']
+        if name == 'Weather type':
+            working_dict[name] = weather_types[int(v)]
+        else:
+            working_dict[name] = v + units
+    return working_dict
+
+
+def build_weather_string(parsed_dict):
+    weather_template = '''\
 {Weather type}
 {temp}
 Wind {Wind speed} {Wind direction}{precip}'''
+    temp_string = parsed_dict['Max temp'] + ' max'
+    if parsed_dict['Feels like'] != parsed_dict['Max temp']:
+        temp_string += ', feels like {}'.format(parsed_dict['Feels like'])
 
-temp_string = working_dict['Max temp'] + ' max'
-if working_dict['Feels like'] != working_dict['Max temp']:
-    temp_string += ', feels like {}'.format(working_dict['Feels like'])
+    precip_chance = parsed_dict['Precipitation probability']
+    if int(precip_chance.replace('%', '')) < 20:
+        precip_string = ''
+    else:
+        precip_string = '\n{} chance of rain'.format(precip_chance)
 
-precip_chance = working_dict['Precipitation probability']
-if int(precip_chance.replace('%', '')) < 20:
-    precip_string = ''
-else:
-    precip_string = '\n{} chance of rain'.format(precip_chance)
+    weather_string = weather_template.format(temp=temp_string,
+                                             precip=precip_string,
+                                             **parsed_dict)
 
-weather_string = weather_template.format(temp=temp_string,
-                                         precip=precip_string,
-                                         **working_dict)
-print(weather_string, '\n')
+    return weather_string
+
+print(build_weather_string(parse_forecast(fetch_forecast(location_dicts[0]['code']))))

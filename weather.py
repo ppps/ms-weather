@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
 import requests
+import subprocess
 from datetime import date, timedelta
 from multiprocessing.dummy import Pool
 
@@ -154,6 +155,26 @@ def fetch_uk_outlook():
     return outlook
 
 
+def asrun(ascript):
+    "Run the given AppleScript and return the standard output and error."
+    osa = subprocess.Popen(['osascript', '-'],
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.DEVNULL)
+    return osa.communicate(ascript)[0]
+
+
+def set_frame_contents(frame_name, text):
+    script = '''\
+tell application "Adobe InDesign CS4"
+	tell the front document
+		set the contents of text frame "{frame}" to "{contents}"
+	end tell
+end tell
+'''
+    asrun(script.format(frame=frame_name, contents=text).encode())
+
+
 if __name__ == '__main__':
     outlook_text = fetch_uk_outlook()
 
@@ -162,13 +183,21 @@ if __name__ == '__main__':
     if today.weekday() == 4:    # today is Friday
         date_list.append(date_string(today + timedelta(2)))
 
-    for dt in date_list:
-        for loc in location_dicts:
-            parsed = parse_forecast(fetch_forecast(loc['code'], dt))
-            loc[dt] = build_weather_string(parsed)
+#     for dt in date_list:
+#         for loc in location_dicts:
+#             parsed = parse_forecast(fetch_forecast(loc['code'], dt))
+#             loc[dt] = build_weather_string(parsed)
 
     with Pool() as pool:
         pool.starmap(
             add_daily_forecast_to_dict,
             [(loc, dt) for loc in location_dicts for dt in date_list]
             )
+
+    for loc in location_dicts:
+        set_frame_contents(loc['name'], loc[date_list[0]])
+        if len(date_list) == 2:
+            set_frame_contents(loc['name'] + '_Sun', loc[date_list[1]])
+
+    set_frame_contents('Outlook', outlook_text)
+

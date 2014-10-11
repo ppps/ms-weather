@@ -3,6 +3,9 @@
 import requests
 from datetime import date, timedelta
 
+with open('metoffice_api_key') as keyfile:
+    api_key = keyfile.read()
+
 weather_types = {'NA': 'Not available',
                  0: 'Clear night',
                  1: 'Sunny day',
@@ -36,31 +39,24 @@ weather_types = {'NA': 'Not available',
                  29: 'Thunder shower',      # day
                  30: 'Thunder'}
 
-location_tuples = (('Aberdeen', 310170),
-                   ('Birmingham', 310002),
-                   ('Cardiff', 350758),
-                   ('Edinburgh', 351351),
-                   ('Glasgow', 310009),
-                   ('Liverpool', 310012),
-                   ('London', 352409),
-                   ('Manchester', 310013),
-                   ('Newcastle', 352793),
-                   ('Norwich', 310115),
-                   ('Plymouth', 310016),
-                   ('Sheffield', 353467),
-                   ('Southampton', 353595),
-                   )
+metoffice_urls = {
+    'base': 'http://datapoint.metoffice.gov.uk/public/data/',
+    'forecast': 'val/wxfcs/all/json/{location}',
+    'summary': 'txt/wxfcs/regionalforecast/json/{location}',
+    }
 
-metoffice_urls = {'base': 'http://datapoint.metoffice.gov.uk/public/data/',
-                  'forecast': 'val/wxfcs/all/json/{location}',
-                  'summary': 'txt/wxfcs/regionalforecast/json/{location}',
-                  }
-
-with open('metoffice_api_key') as keyfile:
-    api_key = keyfile.read()
-
-capabilities_URL = ('http://datapoint.metoffice.gov.uk/public/data/val/wxfcs/'
-                    'all/json/capabilities?res=3hourly&key=' + api_key)
-
-# print(requests.get(capabilities_URL).text)
-print(LOCATION_TUPLES)
+location_tuples = (
+    ('Aberdeen', 310170),
+    ('Birmingham', 310002),
+    ('Cardiff', 350758),
+    ('Edinburgh', 351351),
+    ('Glasgow', 310009),
+    ('Liverpool', 310012),
+    ('London', 352409),
+    ('Manchester', 310013),
+    ('Newcastle', 352793),
+    ('Norwich', 310115),
+    ('Plymouth', 310016),
+    ('Sheffield', 353467),
+    ('Southampton', 353595),
+    )

@@ -158,23 +158,16 @@ if __name__ == '__main__':
     outlook_text = fetch_uk_outlook()
 
     today = date.today()
-    tomorrow = date_string(today + timedelta(1))
+    date_list = [date_string(today + timedelta(1))]
     if today.weekday() == 4:    # today is Friday
-        next_day = date_string(today + timedelta(2))
-    else:
-        next_day = None
+        date_list.append(date_string(today + timedelta(2)))
 
-    for loc in location_dicts:
-        parsed = parse_forecast(fetch_forecast(loc['code'], tomorrow))
-        loc[tomorrow] = build_weather_string(parsed)
-        if next_day:
-            parsed = parse_forecast(fetch_forecast(loc['code'], next_day))
-            loc[next_day] = build_weather_string(parsed)
+    for dt in date_list:
+        for loc in location_dicts:
+            parsed = parse_forecast(fetch_forecast(loc['code'], dt))
+            loc[dt] = build_weather_string(parsed)
 
-    with Pool() as pool:
-        pool.starmap(add_daily_forecast_to_dict,
-                     [(loc, tomorrow) for loc in location_dicts])
-        if next_day:
+    for dt in date_list:
+        with Pool() as pool:
             pool.starmap(add_daily_forecast_to_dict,
-                         [(loc, next_day) for loc in location_dicts])
-
+                         [(loc, dt) for loc in location_dicts])

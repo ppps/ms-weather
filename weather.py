@@ -175,6 +175,14 @@ end tell
     asrun(script.format(frame=frame_name, contents=text).encode())
 
 
+def most_common_condition():
+    conditions = [loc[dt].split('\n')[0]
+                  for loc in location_dicts
+                  for dt in date_list]
+    counted = set((conditions.count(c), c) for c in conditions)
+    return max(counted)[1]
+
+
 if __name__ == '__main__':
     outlook_text = fetch_uk_outlook()
 

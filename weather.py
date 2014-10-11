@@ -143,7 +143,20 @@ def add_daily_forecast_to_dict(location, forecast_date):
 def date_string(d):
     return d.isoformat() + 'T00:00:00Z'
 
+
+def fetch_uk_outlook():
+    url = urls['base'] + urls['summary'].format(location=515)
+    params = {'key': api_key}
+    response = requests.request('GET', url, params=params)
+    periods = response.json()['RegionalFcst']['FcstPeriods']['Period']
+    summary_dict = next(p for p in periods if p['id'] == 'day3to5')
+    outlook = summary_dict['Paragraph']['$']
+    return outlook
+
+
 if __name__ == '__main__':
+    outlook_text = fetch_uk_outlook()
+
     today = date.today()
     tomorrow = date_string(today + timedelta(1))
     if today.weekday() == 4:    # today is Friday
@@ -158,3 +171,5 @@ if __name__ == '__main__':
     # with Pool() as pool:
     #     pool.starmap(add_daily_forecast_to_dict,
     #                  [(loc, tomorrow) for loc in location_dicts])
+
+

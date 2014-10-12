@@ -76,6 +76,7 @@ location_tuples = (
     ('Cardiff', 350758),
     ('Edinburgh', 351351),
     ('Glasgow', 310009),
+    ('Inverness', 320002),
     ('Liverpool', 310012),
     ('London', 352409),
     ('Manchester', 310013),

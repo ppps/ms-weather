@@ -168,9 +168,9 @@ def asrun(ascript):
 def set_frame_contents(frame_name, text):
     script = '''\
 tell application "Adobe InDesign CS4"
-	tell the front document
-		set the contents of text frame "{frame}" to "{contents}"
-	end tell
+\ttell the front document
+\t\tset the contents of text frame "{frame}" to "{contents}"
+\tend tell
 end tell
 '''
     asrun(script.format(frame=frame_name, contents=text).encode())
@@ -209,4 +209,3 @@ if __name__ == '__main__':
             set_frame_contents(loc['name'] + '_Sun', loc[date_list[1]])
 
     set_frame_contents('Outlook', outlook_text)
-

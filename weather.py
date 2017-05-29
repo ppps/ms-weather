@@ -165,6 +165,19 @@ def make_dark_sky_request(*, api_key, latitude, longitude):
     return response.json()
 
 
+def next_days(forecast_data, date, num_days=1):
+    """Extract daily forecasts starting from date for `num_days`"""
+    dailies = forecast_data['daily']['data']
+    # Ensure daily forecasts sorted in chronological order
+    dailies.sort(key=lambda d: d['time'])
+    date_range = pendulum.period(date, date.add(days=num_days - 1))
+    selected_forecasts = [
+        f for f in dailies
+        if pendulum.from_timestamp(f['time']) in date_range
+        ]
+    return selected_forecasts
+
+
 def fetch_forecast(location_code, target_date):
     url = urls['base'] + urls['forecast'].format(location=location_code)
     params = {'key': api_key,

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import requests
 import subprocess
 from datetime import date, timedelta
 from multiprocessing.dummy import Pool
+import sys
 
-with open('metoffice_api_key') as keyfile:
-    api_key = keyfile.read()
+import keyring
+import requests
+import pendulum
 
 weather_types = {'NA': 'Not available',
                  0: 'Clear night',
@@ -88,6 +89,80 @@ location_tuples = (
     )
 
 location_dicts = [{'name': a, 'code': b} for a, b in location_tuples]
+
+
+locations_lat_lon = {
+    'Aberdeen':     (57.1526,   -2.11),
+    'Birmingham':   (52.483056, -1.893611),
+    'Cardiff':      (51.483333, -3.183333),
+    'Edinburgh':    (55.953056, -3.188889),
+    'Glasgow':      (55.858,    -4.259),
+    'Inverness':    (57.4718,   -4.2254),
+    'Liverpool':    (53.4,      -2.983333),
+    'London':       (51.507222, -0.1275),
+    'Manchester':   (53.466667, -2.233333),
+    'Newcastle':    (54.972222, -1.608333),
+    'Norwich':      (52.6,       1.3),
+    'Plymouth':     (50.371389, -4.142222),
+    'Sheffield':    (53.383611, -1.466944),
+    'Southampton':  (50.9,      -1.4),
+    }
+
+
+def get_api_key(*, service='darksky', username='ppps'):
+    """Get the Dark Sky API key from the system keychain
+
+    Expects the key to be saved for the 'darksky' service
+    with the username 'ppps'.
+
+    If the key does not exist in the keychain, it prompts
+    the user to enter it and saves it in the keychain.
+    """
+    key = keyring.get_password(service, username)
+    if key is None:
+        print(
+            'API key is not saved in the keychain, please enter it.',
+            file=sys.stderr)
+        try:
+            key = getpass.getpass(prompt='API key: ')
+            keyring.set_password(service, username, key)
+        except KeyboardInterrupt:
+            sys.exit(1)
+    return key
+
+
+def parse_lastmodified(date_string):
+    """Parse dates matching the Last-Modified HTTP header format
+
+    Example:
+        Mon, 29 May 2017 19:00:29 GMT
+    Is parsed as:
+        2017-05-29T19:00:29+0000
+    """
+    # Replace GMT with UTC as dateutil misinterprets GMT as Europe/London
+    # if you’re in that timezone. See:
+    # https://github.com/dateutil/dateutil/issues/370
+    date_string = date_string.replace('GMT', 'UTC')
+    return pendulum.parse(date_string)
+
+
+def make_dark_sky_request(*, api_key, latitude, longitude):
+    """Fetch the Dark Sky forecast
+
+    The requested forecast includes only the daily forecasts,
+    alerts and flags. It is requested in English using UK units.
+    """
+    ds_url = 'https://api.darksky.net/forecast/{key}/{lat},{lon}'
+    query_params = {
+        'exclude': ','.join(['currently', 'minutely', 'hourly']),
+        'lang': 'en',
+        'units': 'uk2'
+        }
+    response = requests.get(
+        url=ds_url.format(key=api_key, lat=latitude, lon=longitude),
+        params=query_params
+        )
+    return response.json()
 
 
 def fetch_forecast(location_code, target_date):

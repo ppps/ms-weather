@@ -124,7 +124,7 @@ def get_api_key(*, service, username='ppps'):
     if key is None:
         print(
             (f'{service} API key is not saved in the keychain, '
-              'please enter it.'),
+             'please enter it.'),
             file=sys.stderr)
         try:
             key = getpass.getpass(prompt='API key: ')
@@ -179,6 +179,32 @@ def next_days(forecast_data, date, num_days=1):
         if pendulum.from_timestamp(f['time']) in date_range
         ]
     return selected_forecasts
+
+
+def wind_direction(origin_degrees):
+    """Produce human-readable compass direction from degrees
+
+    This produces a rough human-readable approxmiation of the
+    wind direction, such as N or NE, but not (eg) ENE.
+    """
+    deg = origin_degrees % 360
+    if (337.5 <= deg <= 360 or
+            0 <= deg < 22.5):
+        return 'N'
+    elif 22.5 <= deg < 67.5:
+        return 'NE'
+    elif 67.5 <= deg < 112.5:
+        return 'E'
+    elif 112.5 <= deg < 157.5:
+        return 'SE'
+    elif 157.5 <= deg < 202.5:
+        return 'S'
+    elif 202.5 <= deg < 247.5:
+        return 'SW'
+    elif 247.5 <= deg < 292.5:
+        return 'W'
+    elif 292.5 <= deg < 337.5:
+        return 'NW'
 
 
 def fetch_forecast(location_code, target_date):

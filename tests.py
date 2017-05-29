@@ -22,21 +22,36 @@ class TestConvertLastModifiedDate(unittest.TestCase):
 class TestGetAPIKey(unittest.TestCase):
     """get_api_key should return the API key
 
-    This test requires that ppps:darksky be set in the
-    system keychain (to any value).
+    These tests requires that ppps:darksky and ppps:metoffice
+    be set in the system keychain (to any value).
     """
     def setUp(self):
-        key = keyring.get_password('darksky', 'ppps')
-        if key is None:
-            raise unittest.SkipTest('API key is not set in keychain')
+        ds_key = keyring.get_password('darksky', 'ppps')
+        if ds_key is None:
+            raise unittest.SkipTest(
+                'Dark Sky API key is not set in keychain')
         else:
-            self.api_key = key
+            self.ds_api_key = ds_key
 
-    def test_matches_keychain(self):
-        """API key returned from weather module matches keychain"""
+        met_key = keyring.get_password('metoffice', 'ppps')
+        if met_key is None:
+            raise unittest.SkipTest(
+                'Met Office API key is not set in keychain')
+        else:
+            self.met_api_key = met_key
+
+    def test_darksky_matches_keychain(self):
+        """Dark Sky key returned from weather module matches keychain"""
         self.assertEqual(
-            weather.get_api_key(),
-            self.api_key
+            weather.get_api_key(service='darksky'),
+            self.ds_api_key
+            )
+
+    def test_metoffice_matches_keychain(self):
+        """Met Office key returned from weather module matches keychain"""
+        self.assertEqual(
+            weather.get_api_key(service='metoffice'),
+            self.met_api_key
             )
 
 

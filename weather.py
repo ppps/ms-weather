@@ -4,6 +4,8 @@ import subprocess
 from datetime import date, timedelta
 from multiprocessing.dummy import Pool
 import sys
+import getpass
+
 
 import keyring
 import requests
@@ -109,7 +111,7 @@ locations_lat_lon = {
     }
 
 
-def get_api_key(*, service='darksky', username='ppps'):
+def get_api_key(*, service, username='ppps'):
     """Get the Dark Sky API key from the system keychain
 
     Expects the key to be saved for the 'darksky' service
@@ -121,7 +123,8 @@ def get_api_key(*, service='darksky', username='ppps'):
     key = keyring.get_password(service, username)
     if key is None:
         print(
-            'API key is not saved in the keychain, please enter it.',
+            (f'{service} API key is not saved in the keychain, '
+              'please enter it.'),
             file=sys.stderr)
         try:
             key = getpass.getpass(prompt='API key: ')

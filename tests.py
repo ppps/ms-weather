@@ -119,3 +119,54 @@ class TestNextDaysForecasts(unittest.TestCase):
             self.assertEqual(
                 self.pretend_tomorrow.add(days=adjust),
                 pendulum.from_timestamp(data['time']))
+
+
+class TestWindDirection(unittest.TestCase):
+    """Test the wind_direction utility function
+
+    wind_direction(origin_degrees) should return a human-readable
+    approximate direction string such as N or NE (but not ENE).
+    """
+
+    def test_north(self):
+        result_set = (
+            {weather.wind_direction(x) for x in range(338, 361)} |
+            {weather.wind_direction(x) for x in range(0, 23)}
+            )
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('N', result_set)
+
+    def test_north_east(self):
+        result_set = {weather.wind_direction(x) for x in range(23, 68)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('NE', result_set)
+
+    def test_east(self):
+        result_set = {weather.wind_direction(x) for x in range(68, 113)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('E', result_set)
+
+    def test_south_east(self):
+        result_set = {weather.wind_direction(x) for x in range(113, 158)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('SE', result_set)
+
+    def test_south(self):
+        result_set = {weather.wind_direction(x) for x in range(158, 203)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('S', result_set)
+
+    def test_south_west(self):
+        result_set = {weather.wind_direction(x) for x in range(203, 248)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('SW', result_set)
+
+    def test_west(self):
+        result_set = {weather.wind_direction(x) for x in range(248, 293)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('W', result_set)
+
+    def test_north_west(self):
+        result_set = {weather.wind_direction(x) for x in range(293, 338)}
+        self.assertEqual(len(result_set), 1)
+        self.assertIn('NW', result_set)

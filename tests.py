@@ -66,7 +66,7 @@ class TestNextDaysForecasts(unittest.TestCase):
     def setUp(self):
         # test_forecasts.json has a set of daily forecasts
         # starting from 2017-05-30
-        self.pretend_run_date = pendulum.create(2017, 5, 29,
+        self.pretend_tomorrow = pendulum.create(2017, 5, 30,
                                                 tz='Europe/London')
         with open('test_forecasts.json') as json_file:
             self.test_json = json.load(json_file)
@@ -74,7 +74,8 @@ class TestNextDaysForecasts(unittest.TestCase):
     def test_default_one(self):
         """By default next_days returns one forecast"""
         self.assertEqual(
-            len(weather.next_days(date=self.pretend_run_date)),
+            len(weather.next_days(forecast_data=self.test_json,
+                                  date=self.pretend_tomorrow)),
             1
             )
 
@@ -82,24 +83,24 @@ class TestNextDaysForecasts(unittest.TestCase):
         """next_days returns two forecasts when num_days=2"""
         self.assertEqual(
             len(weather.next_days(forecast_data=self.test_json,
-                                  date=self.pretend_run_date,
+                                  date=self.pretend_tomorrow,
                                   num_days=2)),
             2
             )
 
     def test_default_tomorrow(self):
         """By default next_days returns one forecast, for date + 1 day"""
-        tomorrow = self.pretend_run_date.add(days=1)
         result_data = weather.next_days(forecast_data=self.test_json,
-                                        date=self.pretend_run_date)[0]
+                                        date=self.pretend_tomorrow)[0]
         parsed_result_date = pendulum.from_timestamp(result_data['time'])
-        self.assertEqual(tomorrow, parsed_result_date)
+        self.assertEqual(self.pretend_tomorrow, parsed_result_date)
 
     def test_tomorrow_and_next_day(self):
         """next_days returns date + 1 and date + 2 when num_days = 2"""
         result_data = weather.next_days(forecast_data=self.test_json,
-                                        date=self.pretend_run_date)
-        for adjust, data in enumerate(result_data, start=1):
+                                        date=self.pretend_tomorrow,
+                                        num_days=2)
+        for adjust, data in enumerate(result_data):
             self.assertEqual(
-                self.pretend_run_date.add(days=adjust),
+                self.pretend_tomorrow.add(days=adjust),
                 pendulum.from_timestamp(data['time']))

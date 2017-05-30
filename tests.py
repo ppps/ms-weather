@@ -120,6 +120,23 @@ class TestNextDaysForecasts(unittest.TestCase):
                 self.pretend_tomorrow.add(days=adjust),
                 pendulum.from_timestamp(data['time']))
 
+    def test_nonmidnight_date(self):
+        """next_days should handle `date` that is not midnight
+
+        Midnight is important because all of the Dark Sky timestamps
+        are at midnight (0000) of the day for which the forecast
+        data is for.
+
+        `date` with a non-midnight time should be properly reduced
+        to midnight.
+        """
+        dirty_date = pendulum.create(2017, 5, 30, 1, 2, 3,
+                                     tz='Europe/London')
+        self.assertTrue(
+            weather.next_days(forecast_data=self.test_json,
+                                  date=dirty_date)
+            )
+
 
 class TestWindDirection(unittest.TestCase):
     """Test the wind_direction utility function

@@ -93,6 +93,9 @@ def next_days(forecast_data, date, num_days=1):
     dailies = forecast_data['daily']['data']
     # Ensure daily forecasts sorted in chronological order
     dailies.sort(key=lambda d: d['time'])
+
+    # Ensure date is at midnight (to match Dark Sky daily timestamps)
+    date = date.at(0, 0, 0)
     date_range = pendulum.period(date, date.add(days=num_days - 1))
     selected_forecasts = [
         f for f in dailies

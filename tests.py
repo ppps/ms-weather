@@ -1,10 +1,16 @@
 import json
 import unittest
+from unittest import mock
 
 import pendulum
 import keyring
 
 import weather
+
+
+with open('test_forecasts.json') as json_file:
+    TEST_JSON = json.load(json_file)
+
 
 
 class TestConvertLastModifiedDate(unittest.TestCase):
@@ -84,12 +90,12 @@ class TestNextDaysForecasts(unittest.TestCase):
         self.pretend_tomorrow = pendulum.create(2017, 5, 30,
                                                 tz='Europe/London')
         with open('test_forecasts.json') as json_file:
-            self.test_json = json.load(json_file)
+            TEST_JSON = json.load(json_file)
 
     def test_default_one(self):
         """By default next_days returns one forecast"""
         self.assertEqual(
-            len(weather.next_days(forecast_data=self.test_json,
+            len(weather.next_days(forecast_data=TEST_JSON,
                                   date=self.pretend_tomorrow)),
             1
             )
@@ -97,7 +103,7 @@ class TestNextDaysForecasts(unittest.TestCase):
     def test_two(self):
         """next_days returns two forecasts when num_days=2"""
         self.assertEqual(
-            len(weather.next_days(forecast_data=self.test_json,
+            len(weather.next_days(forecast_data=TEST_JSON,
                                   date=self.pretend_tomorrow,
                                   num_days=2)),
             2
@@ -105,14 +111,14 @@ class TestNextDaysForecasts(unittest.TestCase):
 
     def test_default_tomorrow(self):
         """By default next_days returns one forecast, for date + 1 day"""
-        result_data = weather.next_days(forecast_data=self.test_json,
+        result_data = weather.next_days(forecast_data=TEST_JSON,
                                         date=self.pretend_tomorrow)[0]
         parsed_result_date = pendulum.from_timestamp(result_data['time'])
         self.assertEqual(self.pretend_tomorrow, parsed_result_date)
 
     def test_tomorrow_and_next_day(self):
         """next_days returns date + 1 and date + 2 when num_days = 2"""
-        result_data = weather.next_days(forecast_data=self.test_json,
+        result_data = weather.next_days(forecast_data=TEST_JSON,
                                         date=self.pretend_tomorrow,
                                         num_days=2)
         for adjust, data in enumerate(result_data):
@@ -133,7 +139,7 @@ class TestNextDaysForecasts(unittest.TestCase):
         dirty_date = pendulum.create(2017, 5, 30, 1, 2, 3,
                                      tz='Europe/London')
         self.assertTrue(
-            weather.next_days(forecast_data=self.test_json,
+            weather.next_days(forecast_data=TEST_JSON,
                                   date=dirty_date)
             )
 
@@ -187,3 +193,56 @@ class TestWindDirection(unittest.TestCase):
         result_set = {weather.wind_direction(x) for x in range(293, 338)}
         self.assertEqual(len(result_set), 1)
         self.assertIn('NW', result_set)
+
+
+class TestMakeDarkSkyRequest(unittest.TestCase):
+    """Test the make_dark_sky_request function
+
+    This function makes the call to the Dark Sky API, and should
+    appropriately set the API key, lat, lon and other options.
+
+    It should return the JSON of the API response, or None if for
+    whatever reason the server is not available or retrieving the
+    JSON from the response fails for whatever reason.
+    """
+
+    def test_url_and_params(self):
+        """Function uses correct API URL with correct args and params"""
+        with mock.patch('weather.requests.get') as mock_get:
+            weather.make_dark_sky_request(
+                api_key='fake-api-key',
+                latitude=1,
+                longitude=2)
+        mock_get.assert_called_with(
+            url='https://api.darksky.net/forecast/fake-api-key/1,2',
+            params={
+                'exclude': 'currently,minutely,hourly',
+                'lang': 'en',
+                'units': 'uk2'
+                }
+            )
+
+    def test_returns_expected_json_ok(self):
+        """Function returns expected json when the call proceeds OK"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.json.return_value = TEST_JSON
+            result = weather.make_dark_sky_request(
+                api_key='fake-api-key',
+                latitude=1,
+                longitude=2)
+        self.assertEqual(result, TEST_JSON)
+
+
+    def test_returns_None_on_HTTP_failure(self):
+        """If the HTTP response is not OK return None"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.ok = False
+            result = weather.make_dark_sky_request(
+                api_key='fake-api-key',
+                latitude=1,
+                longitude=2)
+        self.assertIsNone(result)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

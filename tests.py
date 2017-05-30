@@ -12,7 +12,6 @@ with open('test_forecasts.json') as json_file:
     TEST_JSON = json.load(json_file)
 
 
-
 class TestConvertLastModifiedDate(unittest.TestCase):
     """Test utility that parses a HTTP last-modified date"""
 
@@ -89,8 +88,6 @@ class TestNextDaysForecasts(unittest.TestCase):
         # starting from 2017-05-30
         self.pretend_tomorrow = pendulum.create(2017, 5, 30,
                                                 tz='Europe/London')
-        with open('test_forecasts.json') as json_file:
-            TEST_JSON = json.load(json_file)
 
     def test_default_one(self):
         """By default next_days returns one forecast"""
@@ -140,7 +137,7 @@ class TestNextDaysForecasts(unittest.TestCase):
                                      tz='Europe/London')
         self.assertTrue(
             weather.next_days(forecast_data=TEST_JSON,
-                                  date=dirty_date)
+                              date=dirty_date)
             )
 
 
@@ -232,7 +229,6 @@ class TestMakeDarkSkyRequest(unittest.TestCase):
                 longitude=2)
         self.assertEqual(result, TEST_JSON)
 
-
     def test_returns_None_on_HTTP_failure(self):
         """If the HTTP response is not OK return None"""
         with mock.patch('weather.requests.get') as mock_get:
@@ -242,6 +238,19 @@ class TestMakeDarkSkyRequest(unittest.TestCase):
                 latitude=1,
                 longitude=2)
         self.assertIsNone(result)
+
+
+class TestWeatherString(unittest.TestCase):
+    """Test the create_weather_string function"""
+
+    def test_summary_max(self):
+        """Returns forecast summary followed by maximum temperature
+
+        Maximum temperature should be rounded to the nearest integer.
+        """
+        expected = 'Drizzle starting in the afternoon. Max 22°C.'
+        result = weather.create_weather_string(TEST_JSON['daily']['data'][0])
+        self.assertEqual(expected, result)
 
 
 if __name__ == '__main__':

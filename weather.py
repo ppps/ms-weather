@@ -107,6 +107,17 @@ def next_days(forecast_data, date, num_days=1):
     return selected_forecasts
 
 
+def create_weather_string(forecast):
+    """Parse forecast dictionary into a human-readable string
+
+    Returned string is the forecast’s human-readable summary following
+    the maximum temperature for that day.
+    """
+    temp = round(forecast['temperatureMax'])
+    summary = forecast['summary']
+    return f'{summary} Max {temp}°C.'
+
+
 def wind_direction(origin_degrees):
     """Produce human-readable compass direction from degrees
 

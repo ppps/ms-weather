@@ -202,14 +202,16 @@ class TestMakeDarkSkyRequest(unittest.TestCase):
     whatever reason the server is not available or retrieving the
     JSON from the response fails for whatever reason.
     """
+    def setUp(self):
+        self.get_args = dict(api_key='fake-api-key',
+                             latitude=1,
+                             longitude=2)
 
     def test_url_and_params(self):
         """Function uses correct API URL with correct args and params"""
         with mock.patch('weather.requests.get') as mock_get:
-            weather.make_dark_sky_request(
-                api_key='fake-api-key',
-                latitude=1,
-                longitude=2)
+            weather.make_dark_sky_request(**self.get_args)
+
         mock_get.assert_called_with(
             url='https://api.darksky.net/forecast/fake-api-key/1,2',
             params={
@@ -223,20 +225,24 @@ class TestMakeDarkSkyRequest(unittest.TestCase):
         """Function returns expected json when the call proceeds OK"""
         with mock.patch('weather.requests.get') as mock_get:
             mock_get.return_value.json.return_value = TEST_JSON
-            result = weather.make_dark_sky_request(
-                api_key='fake-api-key',
-                latitude=1,
-                longitude=2)
+            result = weather.make_dark_sky_request(**self.get_args)
         self.assertEqual(result, TEST_JSON)
 
     def test_returns_None_on_HTTP_failure(self):
         """If the HTTP response is not OK return None"""
         with mock.patch('weather.requests.get') as mock_get:
             mock_get.return_value.ok = False
-            result = weather.make_dark_sky_request(
-                api_key='fake-api-key',
-                latitude=1,
-                longitude=2)
+            result = weather.make_dark_sky_request(**self.get_args)
+        self.assertIsNone(result)
+
+    def test_resturns_None_on_json_parse_failure(self):
+        """Function returns None when it fails to parse JSON"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.ok = True
+            mock_get.return_value.json.side_effect = (
+                json.decoder.JSONDecodeError(
+                    'Expecting value', '<html></html>', 0))
+            result = weather.make_dark_sky_request(**self.get_args)
         self.assertIsNone(result)
 
 
@@ -251,6 +257,56 @@ class TestWeatherString(unittest.TestCase):
         expected = 'Drizzle starting in the afternoon. Max 22°C.'
         result = weather.create_weather_string(TEST_JSON['daily']['data'][0])
         self.assertEqual(expected, result)
+
+
+class TestMetOfficeSummary(unittest.TestCase):
+    """Test the function that retrieves the Met Office UK text summary"""
+    def setUp(self):
+        self.api_key = 'fake-api-key'
+        with open('test_summary.xml', 'rb') as xml_file:
+            self.test_xml_bytes = xml_file.read()
+
+    def test_url_and_params(self):
+        """Function uses correct API URL with correct args and params"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.content = self.test_xml_bytes
+            weather.met_office_fetch_uk_outlook(self.api_key)
+
+        mock_get.assert_called_with(
+            url=('http://datapoint.metoffice.gov.uk/public/data/'
+                 'txt/wxfcs/regionalforecast/xml/515'),
+            params={
+                'key': self.api_key
+                }
+            )
+
+    def test_returns_expected_summary_ok(self):
+        """Function returns expected summary text when call proceeds OK"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.ok = True
+            mock_get.return_value.content = self.test_xml_bytes
+            result = weather.met_office_fetch_uk_outlook(self.api_key)
+        self.assertEqual(
+            result,
+            ('Fine start, but rain in the NW moving slowly SE across the UK. '
+             'Becoming very warm ahead of this, with risk of thunderstorms. '
+             'Clearing to sunshine and showers by Saturday.')
+            )
+
+    def test_resturns_None_on_HTTP_failure(self):
+        """Function returns None when HTTP response is not OK"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.ok = False
+            result = weather.met_office_fetch_uk_outlook(self.api_key)
+        self.assertIsNone(result)
+
+    def test_resturns_None_on_xml_parse_failure(self):
+        """Function returns None when it fails to parse XML"""
+        with mock.patch('weather.requests.get') as mock_get:
+            mock_get.return_value.ok = True
+            mock_get.return_value.content = b''
+            result = weather.met_office_fetch_uk_outlook(self.api_key)
+        self.assertIsNone(result)
 
 
 if __name__ == '__main__':

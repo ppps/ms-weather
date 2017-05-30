@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from multiprocessing.dummy import Pool
 import sys
 import getpass
+from json.decoder import JSONDecodeError
 
 
 from bs4 import BeautifulSoup
@@ -85,9 +86,12 @@ def make_dark_sky_request(*, api_key, latitude, longitude):
         url=ds_url.format(key=api_key, lat=latitude, lon=longitude),
         params=query_params
         )
-    if response.ok:
-        return response.json()
-    else:
+    if not response.ok:
+        return None
+    try:
+        data = response.json()
+        return data
+    except JSONDecodeError:
         return None
 
 
@@ -175,9 +179,15 @@ def met_office_fetch_uk_outlook(api_key):
     url = ('http://datapoint.metoffice.gov.uk/public/data/'
            'txt/wxfcs/regionalforecast/xml/{location}'
            ).format(location=515)
-    response = requests.get(url, params={'key': api_key})
-    soup = BeautifulSoup(response.content, 'xml')
-    return(soup.find(id='day3to5').string)
+    response = requests.get(url=url, params={'key': api_key})
+    if not response.ok:
+        return None
+    try:
+        soup = BeautifulSoup(response.content, 'xml')
+        summary = soup.find(id='day3to5').string
+        return summary
+    except AttributeError:
+        return None
 
 
 def asrun(ascript):

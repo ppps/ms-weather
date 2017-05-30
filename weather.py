@@ -85,7 +85,10 @@ def make_dark_sky_request(*, api_key, latitude, longitude):
         url=ds_url.format(key=api_key, lat=latitude, lon=longitude),
         params=query_params
         )
-    return response.json()
+    if response.ok:
+        return response.json()
+    else:
+        return None
 
 
 def next_days(forecast_data, date, num_days=1):

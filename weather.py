@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 
+import json
 import subprocess
-
-import requests
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 with open('metoffice_api_key') as keyfile:
     api_key = keyfile.read()
 
-urls = {
-    'base': 'http://datapoint.metoffice.gov.uk/public/data/',
-    'summary': 'txt/wxfcs/regionalforecast/json/{location}',
-    }
-
 
 def fetch_uk_outlook():
-    url = urls['base'] + urls['summary'].format(location=515)
+    outlook_url = ('http://datapoint.metoffice.gov.uk/public/data/txt/'
+                   'wxfcs/regionalforecast/json/515')
     params = {'key': api_key}
-    response = requests.request('GET', url, params=params)
-    periods = response.json()['RegionalFcst']['FcstPeriods']['Period']
+
+    response = urlopen(outlook_url + '?' + urlencode(params))
+    payload = json.loads(response.read().decode('utf-8'))
+    periods = payload['RegionalFcst']['FcstPeriods']['Period']
     return periods
 
 

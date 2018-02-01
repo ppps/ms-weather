@@ -5,8 +5,9 @@ import subprocess
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-with open('metoffice_api_key') as keyfile:
-    api_key = keyfile.read()
+key_file = __file__.rsplit('/', maxsplit=1)[0] + '/metoffice_api_key'
+with open(key_file) as f:
+    api_key = f.read()
 
 
 def fetch_uk_outlook():

@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import urlopen
+from urllib.error import HTTPError
 
 api_key = Path(__file__).with_name('metoffice_api_key').read_text().rstrip()
 
@@ -13,10 +14,17 @@ def fetch_uk_outlook():
                    'wxfcs/regionalforecast/json/515')
     params = {'key': api_key}
 
-    response = urlopen(outlook_url + '?' + urlencode(params))
-    payload = json.loads(response.read().decode('utf-8'))
-    periods = payload['RegionalFcst']['FcstPeriods']['Period']
-    return periods
+    try:
+        request_url = outlook_url + '?' + urlencode(params)
+        response = urlopen(outlook_url + '?' + urlencode(params))
+        payload = json.loads(response.read().decode('utf-8'))
+        periods = payload['RegionalFcst']['FcstPeriods']['Period']
+        return periods
+    except HTTPError as exc:
+        print("ERROR: Problem with HTTP request to MetOffice API.")
+        print(f"Request URL was: {request_url}")
+        print("Exception was:")
+        print(exc)
 
 
 def asrun(ascript):

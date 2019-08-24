@@ -32,8 +32,8 @@ def asrun(ascript):
     osa = subprocess.Popen(['osascript', '-'],
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
-                           stderr=subprocess.DEVNULL)
-    return osa.communicate(ascript)[0]
+                           stderr=subprocess.PIPE)
+    return osa.communicate(ascript)
 
 
 def set_frame_contents(frame_name, text):
@@ -44,7 +44,7 @@ tell application "Adobe InDesign CS4"
 \tend tell
 end tell
 '''
-    asrun(script.format(frame=frame_name, contents=text).encode())
+    return asrun(script.format(frame=frame_name, contents=text).encode())
 
 
 if __name__ == '__main__':
@@ -53,5 +53,7 @@ if __name__ == '__main__':
     outlook_obj = [p for p in outlook_text
                    if p['id'] == 'day3to5']
     day3to5 = outlook_obj[0]['Paragraph']['$']
-    set_frame_contents('Weather-Today', day2)
-    set_frame_contents('Weather-Outlook', day3to5)
+    day2_set_result = set_frame_contents('Weather-Today', day2)
+    day3to5_set_result = set_frame_contents('Weather-Outlook', day3to5)
+    for output in filter(bool, day2_set_result + day3to5_set_result):
+        print(f"ERROR with AppleScript: '{output.decode('utf-8').rstrip()}'")

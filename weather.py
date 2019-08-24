@@ -38,10 +38,12 @@ def asrun(ascript):
 
 def set_frame_contents(frame_name, text):
     script = '''\
-tell application "Adobe InDesign CS4"
-\ttell the front document
-\t\tset the contents of text frame "{frame}" to "{contents}"
-\tend tell
+tell application "Adobe InDesign CC 2019"
+	tell the active document
+		repeat with eachPage in (every page) -- "every page" does not include masters
+			set (the contents of the first text frame whose label is "{frame}") to "{contents}"
+		end repeat
+	end tell
 end tell
 '''
     return asrun(script.format(frame=frame_name, contents=text).encode())

@@ -2,13 +2,11 @@
 
 import json
 import subprocess
+from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-key_file = __file__.rsplit('/', maxsplit=1)[0] + '/metoffice_api_key'
-with open(key_file) as f:
-    api_key = f.read()
-
+api_key = Path(__file__).with_name('metoffice_api_key').read_text().rstrip()
 
 def fetch_uk_outlook():
     outlook_url = ('http://datapoint.metoffice.gov.uk/public/data/txt/'
